@@ -14,6 +14,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from typing import List, Tuple, Optional
 from difflib import SequenceMatcher
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -1083,5 +1084,6 @@ def download():
                     as_attachment=True,
                     download_name='resume_rankings.csv')
 
-if __name__ == '__main__':
-    app.run(debug=True) 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Render assigns PORT dynamically
+    app.run(host="0.0.0.0", port=port) 
