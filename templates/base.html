@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Resume Ranker{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="nav-title">RESUME RANKER</a>
+        <div class="nav-links">
+            <a href="/about" class="nav-link">About</a>
+            <a href="/contact" class="nav-link">Contact</a>
+            <a href="/privacy" class="nav-link">Privacy</a>
+            <a href="/testimonials" class="nav-link">Testimonials</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <button id="scrollToTop" class="scroll-to-top" aria-label="Scroll to top">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </button>
+
+    <script>
+        // Scroll to top functionality
+        const scrollToTop = document.getElementById('scrollToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                scrollToTop.classList.add('show');
+            } else {
+                scrollToTop.classList.remove('show');
+            }
+        });
+
+        scrollToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+</html> 

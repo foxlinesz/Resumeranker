@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - Resume Ranker{% endblock %}
+
+{% block content %}
+<div class="content-page">
+    <div class="content-box">
+        <h2>🔒 Data Processing</h2>
+        <p>Resume Ranker processes all data <strong>locally</strong> on your device. No resume files or job descriptions are uploaded or stored in the cloud. All analysis happens entirely in your browser.</p>
+    </div>
+
+    <div class="content-box">
+        <h2>📥 What Information Is Used?</h2>
+        <p>We only use the following inputs during your session:</p>
+        <ul>
+            <li>Resume files you upload for analysis</li>
+            <li>Job descriptions you provide</li>
+            <li>Results from the resume-job match (e.g., scores, skills, relevance)</li>
+        </ul>
+        <p>None of this data is stored, transmitted, or shared.</p>
+    </div>
+
+    <div class="content-box">
+        <h2>🧠 What We Analyze</h2>
+        <ul>
+            <li>Skills extracted from resume and job description</li>
+            <li>Title relevance (e.g., recruiter vs hiring manager)</li>
+            <li>Total and relevant years of experience</li>
+            <li>Highest degree (e.g., MBA, B.Tech)</li>
+            <li>Summary text and key qualifications</li>
+        </ul>
+    </div>
+
+    <div class="content-box">
+        <h2>🛡️ Security</h2>
+        <p>All logic runs fully offline in your browser using local computation. No external API calls or third-party tracking are used.</p>
+    </div>
+
+    <div class="content-box">
+        <h2>🔄 Updates to This Policy</h2>
+        <p>This policy may be updated if features change.<br>
+        <strong>Last updated: April 2025</strong></p>
+    </div>
+</div>
+{% endblock %} 

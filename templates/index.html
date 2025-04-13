@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Ranker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="nav-title">RESUME RANKER</a>
+        <div class="nav-links">
+            <a href="/about" class="nav-link">About</a>
+            <a href="/contact" class="nav-link">Contact</a>
+            <a href="/privacy" class="nav-link">Privacy</a>
+            <a href="/testimonials" class="nav-link">Testimonials</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="upload-section">
+            <div class="upload-box" id="drop-area">
+                <div class="upload-icon">📄</div>
+                <h3>Upload Resumes</h3>
+                <p>Drag and drop files here or click to upload</p>
+                <p class="text-muted">Supported formats: PDF, DOCX</p>
+                <div id="file-list" class="file-list"></div>
+            </div>
+
+            <div class="job-box">
+                <h3>Job Description</h3>
+                <textarea id="jobDescription" class="job-description" placeholder="Enter job description here..."></textarea>
+            </div>
+        </section>
+
+        <button id="rankButton" class="rank-button" disabled>Rank Resumes</button>
+
+        <section class="results-section" id="results" style="display: none;">
+            <h2 class="results-header">Results</h2>
+            <div class="results-container">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Match Score</th>
+                            <th>Experience (YRS)</th>
+                            <th>Matched Skills</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileList = document.getElementById('file-list');
+        const rankButton = document.getElementById('rankButton');
+        const resultsDiv = document.getElementById('results');
+        const jobDescription = document.getElementById('jobDescription');
+
+        let files = [];
+
+        // Drag and drop handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('active'));
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('active'));
+        });
+
+        dropArea.addEventListener('drop', handleDrop);
+        dropArea.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = '.pdf,.docx';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            
+            input.click();
+            input.addEventListener('change', (e) => {
+                handleFiles([...e.target.files]);
+                document.body.removeChild(input);
+            });
+        });
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const newFiles = [...dt.files];
+            handleFiles(newFiles);
+        }
+
+        function handleFiles(newFiles) {
+            files = [...files, ...newFiles.filter(file => 
+                file.name.toLowerCase().endsWith('.pdf') || 
+                file.name.toLowerCase().endsWith('.docx')
+            )];
+            updateFileList();
+            updateRankButton();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = files.map((file, index) => `
+                <div class="file-item">
+                    <span class="file-name">${file.name.replace(/\.(pdf|docx)$/i, '')}</span>
+                    <button onclick="removeFile(${index})" class="remove-file">
+                        ×
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(index) {
+            files.splice(index, 1);
+            updateFileList();
+            updateRankButton();
+        }
+
+        function updateRankButton() {
+            rankButton.disabled = files.length === 0 || !jobDescription.value.trim();
+        }
+
+        jobDescription.addEventListener('input', updateRankButton);
+
+        rankButton.addEventListener('click', async () => {
+            const formData = new FormData();
+            files.forEach(file => formData.append('resumes[]', file));
+            formData.append('jobDescription', jobDescription.value);
+
+            try {
+                rankButton.disabled = true;
+                rankButton.textContent = 'Processing...';
+
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    console.error('Server error:', data.error);
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Upload failed:', error);
+                alert('Error: ' + (error.message || 'An error occurred while processing the files'));
+            } finally {
+                rankButton.disabled = false;
+                rankButton.textContent = 'Rank Resumes';
+            }
+        });
+
+        function displayResults(results) {
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            results.forEach(result => {
+                const row = document.createElement('tr');
+                
+                // Filename cell
+                const filenameCell = document.createElement('td');
+                filenameCell.textContent = result.filename.replace(/\.(pdf|docx)$/i, '');
+                row.appendChild(filenameCell);
+                
+                // Score cell
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = `${result.score}%`;
+                row.appendChild(scoreCell);
+                
+                // Experience cell
+                const experienceCell = document.createElement('td');
+                experienceCell.textContent = result.experience;
+                row.appendChild(experienceCell);
+                
+                // Skills cell
+                const skillsCell = document.createElement('td');
+                const skillsContainer = document.createElement('div');
+                skillsContainer.className = 'matched-skills';
+                
+                result.matched_skills.forEach(skill => {
+                    const skillPill = document.createElement('span');
+                    skillPill.className = 'skill-pill';
+                    skillPill.textContent = skill;
+                    skillsContainer.appendChild(skillPill);
+                });
+                
+                skillsCell.appendChild(skillsContainer);
+                row.appendChild(skillsCell);
+                
+                // More Info cell
+                const moreInfoCell = document.createElement('td');
+                const moreInfoButton = document.createElement('button');
+                moreInfoButton.className = 'more-info-button';
+                moreInfoButton.innerHTML = '▼';
+                moreInfoButton.onclick = () => toggleMoreInfo(row, result);
+                moreInfoCell.appendChild(moreInfoButton);
+                row.appendChild(moreInfoCell);
+                
+                tbody.appendChild(row);
+            });
+            
+            resultsDiv.style.display = 'block';
+        }
+        
+        function toggleMoreInfo(row, result) {
+            const nextRow = row.nextElementSibling;
+            const button = row.querySelector('.more-info-button');
+            
+            if (nextRow && nextRow.classList.contains('more-info-row')) {
+                // Row is expanded, collapse it
+                nextRow.remove();
+                button.innerHTML = '▼';
+            } else {
+                // Create and insert expanded row
+                const expandedRow = document.createElement('tr');
+                expandedRow.className = 'more-info-row';
+                
+                const expandedCell = document.createElement('td');
+                expandedCell.colSpan = 5;
+                
+                let content = `<div class="more-info-content">`;
+                
+                // Add latest title
+                content += `<div class="more-info-line">
+                    <span class="more-info-label">Latest Title:</span>
+                    <span class="more-info-value">${result.latest_title || 'Not found'}</span>
+                </div>`;
+                
+                // Add education
+                content += `<div class="more-info-line">
+                    <span class="more-info-label">Education:</span>
+                    <span class="more-info-value">${result.education || 'Not found'}</span>
+                </div>`;
+                
+                // Add relevant experience if available
+                if (result.experience_details && result.experience_details.relevant_years) {
+                    content += `<div class="more-info-line">
+                        <span class="more-info-label">Relevant Experience:</span>
+                        <span class="more-info-value">${result.experience_details.relevant_years.toFixed(1)} yrs</span>
+                    </div>`;
+                }
+                
+                content += `</div>`;
+                expandedCell.innerHTML = content;
+                expandedRow.appendChild(expandedCell);
+                
+                row.parentNode.insertBefore(expandedRow, row.nextSibling);
+                button.innerHTML = '▲';
+            }
+        }
+    </script>
+</body>
+</html> 
