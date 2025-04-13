@@ -887,6 +887,10 @@ def extract_relevant_experience(text: str, job_context: Optional[str]) -> Tuple[
     
     return round(total_months / 12, 1), best_match_title
 
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({"message": "Resume Ranker backend is live ✅"})
+
 @app.route('/')
 def index():
     """Serve the main application page."""
@@ -915,74 +919,30 @@ def privacy():
 def testimonials():
     return render_template('testimonials.html')
 
-@app.route('/rank-resumes', methods=['POST'])
+@app.route("/rank-resumes", methods=["POST"])
 def rank_resumes():
-    """
-    Endpoint to rank resumes against a job description.
-    Accepts:
-    - resumes[]: List of resume files (PDF/DOCX)
-    - jobDescription: Text of the job description
-    
-    Returns:
-    - Success: { "results": [...] }
-    - Error: { "error": "error message" }
-    """
     try:
-        # Check if files were uploaded
-        if 'resumes[]' not in request.files:
-            return jsonify({'error': 'No resume files provided'}), 400
-        
-        # Get job description
-        job_description = request.form.get('jobDescription', '').strip()
-        if not job_description:
-            return jsonify({'error': 'No job description provided'}), 400
+        if 'files' not in request.files:
+            return jsonify({"error": "No files uploaded"}), 400
+        if 'jobDescription' not in request.form:
+            return jsonify({"error": "Job description missing"}), 400
 
-        # Get list of uploaded files
-        files = request.files.getlist('resumes[]')
-        if not files or all(file.filename == '' for file in files):
-            return jsonify({'error': 'No valid files provided'}), 400
+        resumes = request.files.getlist("files")
+        job_description = request.form["jobDescription"]
 
-        results = []
+        print(f"🔍 Received {len(resumes)} resume(s)")
+        print(f"📄 Job description length: {len(job_description)} characters")
 
-        # Process each file
-        for file in files:
-            if file.filename == '':
-                continue
+        # Temporary dummy output for debugging
+        dummy_output = [
+            {"filename": resume.filename, "score": 88} for resume in resumes
+        ]
 
-            try:
-                # Secure the filename
-                filename = secure_filename(file.filename)
-                
-                # For testing purposes, create a dummy result
-                result = {
-                    'filename': filename,
-                    'score': 85.5,  # Dummy score
-                    'experience': "5.2 yrs",
-                    'relevant_experience': "3.8 yrs",
-                    'latest_title': "Senior Software Engineer",
-                    'education': "M.Sc Computer Science",
-                    'matched_skills': ["Python", "Flask", "AWS"],
-                    'reason_summary': "Strong technical background with relevant experience"
-                }
-                results.append(result)
-
-            except Exception as e:
-                # Log the error but continue processing other files
-                print(f"Error processing file {file.filename}: {str(e)}")
-                continue
-
-        if not results:
-            return jsonify({'error': 'No valid results could be generated from the provided files'}), 400
-
-        # Sort results by score (descending)
-        results.sort(key=lambda x: x['score'], reverse=True)
-
-        return jsonify({'results': results})
+        return jsonify({"results": dummy_output}), 200
 
     except Exception as e:
-        # Log the error for debugging
-        print(f"Error in rank_resumes: {str(e)}")
-        return jsonify({'error': 'An internal server error occurred'}), 500
+        print(f"❌ Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/download')
 def download():
@@ -992,5 +952,5 @@ def download():
                     download_name='resume_rankings.csv')
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render assigns PORT dynamically
+    port = int(os.environ.get("PORT", 10000))  # Use 10000 as default port
     app.run(host="0.0.0.0", port=port) 
