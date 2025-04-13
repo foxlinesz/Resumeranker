@@ -889,6 +889,7 @@ def extract_relevant_experience(text: str, job_context: Optional[str]) -> Tuple[
 
 @app.route("/", methods=["GET"])
 def root():
+    """Root endpoint that returns a health check message."""
     return jsonify({"message": "Resume Ranker backend is live ✅"})
 
 @app.route('/')
@@ -951,6 +952,7 @@ def download():
                     as_attachment=True,
                     download_name='resume_rankings.csv')
 
+# Only run when developing locally
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Use 10000 as default port
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port) 
