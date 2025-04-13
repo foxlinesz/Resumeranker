@@ -887,15 +887,10 @@ def extract_relevant_experience(text: str, job_context: Optional[str]) -> Tuple[
     
     return round(total_months / 12, 1), best_match_title
 
-@app.route("/", methods=["GET"])
-def root():
-    """Root endpoint that returns a health check message."""
-    return jsonify({"message": "Resume Ranker backend is live ✅"})
-
-@app.route('/')
+@app.route("/")
 def index():
     """Serve the main application page."""
-    return "Resume Ranker API is running"
+    return render_template("index.html")
 
 @app.route('/about')
 def about():
